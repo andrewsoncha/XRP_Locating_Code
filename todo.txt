@@ -1,0 +1,7 @@
+Test out encoders to find out if robot can know exact distance it moved
+
+Currently, the robot moves in different speeds even when set in same speed using drivetrain.set_speed()
+
+Ask math professors about our point matching problem
+
+

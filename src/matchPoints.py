@@ -54,7 +54,7 @@ if __name__ == '__main__':
     distList = []
     cartesianList1 = []
     cartesianList2 = []
-    with open('spinValuesDorm1', 'r') as file:
+    with open('../testData/spinValuesDorm1', 'r') as file:
         for line in file:
             words = line.split()
             angleVal = radians(float(words[0]))
@@ -65,7 +65,7 @@ if __name__ == '__main__':
             angleList.append(angleVal)
             distList.append(distVal)
             cartesianList1 = [polarToCartesian(pair) for pair in zip(angleList, distList)]
-    with open('spinValuesDorm2', 'r') as file:
+    with open('../testData/spinValuesDorm2', 'r') as file:
         for line in file:
             words = line.split()
             angleVal = radians(float(words[0]))

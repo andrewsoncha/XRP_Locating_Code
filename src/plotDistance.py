@@ -23,7 +23,7 @@ def polarToCartesian(polarCoor):
 if __name__ == '__main__':
     angleList = []
     distList = []
-    with open('spinValuesDorm2', 'r') as file:
+    with open('../testData/spinValuesDorm2', 'r') as file:
         for line in file:
             words = line.split()
             angleVal = radians(float(words[0]))
