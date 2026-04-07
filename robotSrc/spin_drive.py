@@ -1,7 +1,6 @@
 from XRPLib.defaults import *
 from time import sleep
 
-
 def spin():
     BASE_SPEED = 30
    
@@ -21,14 +20,12 @@ def spin():
        
         left_speed = BASE_SPEED
         right_speed = -BASE_SPEED
-
         drivetrain.set_speed(left_speed, right_speed)
        
         sleep(0.05)
    
     drivetrain.stop()
     print("Spin complete.")
-
 
 def drive_distance(distance=1):
     sleep(0.5)
@@ -40,7 +37,11 @@ def drive_distance(distance=1):
     ACCEL_RATE = 2
     STOP_DIST = 15
     Kp = 1.2
-    Kd = 0.8
+    
+    Ki = 0.01   # integral constant
+    Kd = 0.8    # derivative constant
+    INTEGRAL_CLAMP = 30  # prevents integral windup
+    
     MAX_SPEED = 100
     
     def clamp(val, min_val, max_val):
@@ -48,11 +49,11 @@ def drive_distance(distance=1):
     
     imu.reset_yaw()
     previous_error = 0
+    integral_error = 0
     
     print("Driving...")
     
     start_left_count = drivetrain.get_left_encoder_position()
-
     while True:
         dist = rangefinder.distance()
         if dist < STOP_DIST:
@@ -69,7 +70,6 @@ def drive_distance(distance=1):
         
         left_distance_ft  = left_count / (288 / 9.2)
         right_distance_ft = right_count / (288 / 9.2)
-
         print(f"L Rotations: {left_distance_ft:.3f} | R Rotations: {right_distance_ft:.3f}")
         
         if (left_distance_ft + right_distance_ft) / 2 >= distance:
@@ -78,9 +78,15 @@ def drive_distance(distance=1):
         
         current_yaw = imu.get_yaw()
         error = -current_yaw
-        
+
+        # integral
+        integral_error += error
+        integral_error = clamp(integral_error, -INTEGRAL_CLAMP, INTEGRAL_CLAMP)
+
+        # derivative
         derivative = error - previous_error
-        correction = Kp * error + Kd * derivative
+
+        correction = Kp * error + Ki * integral_error + Kd * derivative
         
         left_speed = current_base_speed - correction
         right_speed = current_base_speed + correction
@@ -97,12 +103,11 @@ def drive_distance(distance=1):
     drivetrain.stop()
     print("Drive complete.")
 
-
 print("Press button to start")
 board.wait_for_button()
+
 spin()
 sleep(1)
 drive_distance(1)
 sleep(1)
-
 spin()
