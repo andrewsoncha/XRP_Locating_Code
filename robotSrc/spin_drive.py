@@ -2,29 +2,29 @@ from XRPLib.defaults import *
 from time import sleep
 
 def spin():
-    BASE_SPEED = 30
+    BASE_SPEED = 5
    
     imu.reset_yaw()
    
     print("Spinning...")
    
     while True:
+        rangeDist = rangefinder.distance()
         current_yaw = imu.get_yaw()
         
-        print(f"Yaw: {current_yaw:.2f}")
+        print(f"Yaw: {current_yaw:.2f}, Range rangeDistance: {rangeDist:.1f} cm")
        
-        if abs(current_yaw) >= 325:
+        if abs(current_yaw) >= 340:
             drivetrain.stop()
             print("Reached 360 degrees.")
             break
        
-        left_speed = BASE_SPEED
-        right_speed = -BASE_SPEED
-        drivetrain.set_speed(left_speed, right_speed)
+        drivetrain.set_effort(0.5, -0.5)
        
         sleep(0.05)
    
     drivetrain.stop()
+    drivetrain.reset_encoder_position()
     print("Spin complete.")
 
 def drive_distance(distance=1):
@@ -38,11 +38,11 @@ def drive_distance(distance=1):
     STOP_DIST = 15
     Kp = 1.2
     
-    Ki = 0.01   # integral constant
-    Kd = 0.8    # derivative constant
-    INTEGRAL_CLAMP = 30  # prevents integral windup
+    Ki = 0.01   # Integral constant 
+    Kd = 0.8    # Derivative constant
+    INTEGRAL_CLAMP = 30  # Prevents integral windup
     
-    MAX_SPEED = 100
+    MAX_SPEED = 30
     
     def clamp(val, min_val, max_val):
         return max(min_val, min(max_val, val))
@@ -70,7 +70,7 @@ def drive_distance(distance=1):
         
         left_distance_ft  = left_count / (288 / 9.2)
         right_distance_ft = right_count / (288 / 9.2)
-        print(f"L Rotations: {left_distance_ft:.3f} | R Rotations: {right_distance_ft:.3f}")
+        # print(f"L Rotations: {left_distance_ft:.3f} | R Rotations: {right_distance_ft:.3f}")
         
         if (left_distance_ft + right_distance_ft) / 2 >= distance:
             drivetrain.stop()
@@ -79,11 +79,11 @@ def drive_distance(distance=1):
         current_yaw = imu.get_yaw()
         error = -current_yaw
 
-        # integral
+        # Integral
         integral_error += error
         integral_error = clamp(integral_error, -INTEGRAL_CLAMP, INTEGRAL_CLAMP)
 
-        # derivative
+        # Derivative
         derivative = error - previous_error
 
         correction = Kp * error + Ki * integral_error + Kd * derivative
@@ -101,13 +101,13 @@ def drive_distance(distance=1):
         sleep(0.02)
 
     drivetrain.stop()
+    drivetrain.reset_encoder_position()
     print("Drive complete.")
 
 print("Press button to start")
 board.wait_for_button()
-
 spin()
 sleep(1)
-drive_distance(1)
+# drive_distance(1)
 sleep(1)
 spin()
