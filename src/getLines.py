@@ -12,7 +12,7 @@ def polarToCartesian(polarCoor):
     return (pos[0] + dist*cos(angle), pos[1] + dist*sin(angle))
 
 class Hough:
-    def __init__(self, maxR, rN = 20, angleN = 50):
+    def __init__(self, maxR, rN = 60, angleN = 40):
         self.angleN = angleN
         self.rN = rN
         self.maxR = maxR
@@ -21,18 +21,25 @@ class Hough:
         print(len(self.accumulator), len(self.accumulator[0]))
 
     def roundR(self, r):
-        return self.rN//2 + int(r * self.rN//2 / maxR)
+        print(f'roundR({r})')
+        print(f'roundR results: {int(r * (self.rN-1) / maxR)}')
+        #return self.rN//2 + int(r * self.rN//2 / maxR)
+        return self.rN //2 + int(r * (self.rN//2) / self.maxR)
 
     def vote(self, x, y):
         r = np.sqrt(x**2 + y**2)
-        theta = np.arctan2(x, y)
         for angleI in range(self.angleN):
             angle = self.angleList[angleI]
-            result_rI = self.roundR(r * np.cos(angle - theta))
-            self.accumulator[angleI][result_rI] = self.accumulator[angleI][result_rI] + 1
+            # result_rI = self.roundR(r * np.cos(angle - theta))
+            result_rI = self.roundR(x*np.cos(angle) + y*np.sin(angle))
+            print(f'angle: {angle}   result_rI: {result_rI}')
+            self.accumulator[angleI][result_rI] += 1
+        print()
 
     def getLineParameters(self, thresh=5):
-        return [(self.angleList[i], (j/self.rN*self.maxR), self.accumulator[i][j]) for i in range(self.angleN) for j in range(self.rN) if self.accumulator[i][j]>=thresh]
+        print([(self.angleList[i], (j/self.rN*self.maxR), self.accumulator[i][j]) for i in range(self.angleN) for j in range(self.rN) if self.accumulator[i][j]>=thresh])
+
+        return [(self.angleList[i], ((j-self.rN//2) * self.maxR/(self.rN//2)), self.accumulator[i][j]) for i in range(self.angleN) for j in range(self.rN) if self.accumulator[i][j]>=thresh]
 
 if __name__ == '__main__':
     angleList = []
@@ -62,17 +69,25 @@ if __name__ == '__main__':
     cartesianList1 = [polarToCartesian(pair) for pair in zip(angleList, posList, distList) if pair[1]==(0,0)]
     cartesianList2 = [polarToCartesian(pair) for pair in zip(angleList, posList, distList) if pair[1]==(5,0)]
     cartesianList = [polarToCartesian(pair) for pair in zip(angleList, posList, distList)]
+    
+    #Remove points too far from origin point
+    cartesianList = [(x, y) for (x, y) in cartesianList if np.sqrt(x**2+y**2) < 200]
+    cartesianList = [(x*10, y*10) for (x, y) in cartesianList]
     maxR = max([np.sqrt(x**2+y**2) for (x, y) in cartesianList])
+    
     print('maxR: ', maxR)
     hough = Hough(maxR)
     for (x, y) in cartesianList:
         hough.vote(x, y)
-    lines = hough.getLineParameters(20)
+    plt.imshow(hough.accumulator)
+    lines = hough.getLineParameters(5)
 
     fig = plt.figure()
     ax = fig.add_subplot()
-    plotCartesian(ax, cartesianList1, color='b')
-    plotCartesian(ax, cartesianList2, color='red')
+    # plotCartesian(ax, cartesianList1, color='b')
+    # plotCartesian(ax, cartesianList2, color='red')
+
+    plotCartesian(ax, cartesianList, color='b')
 
     for (i_theta, i_rho, _) in lines:
             theta = i_theta
@@ -81,17 +96,19 @@ if __name__ == '__main__':
 
             rho = i_rho 
             print('theta: ', theta, 'rho: ', rho)
+            print('a: ', a, '   b: ', b)
 
             x0 = a * rho
             y0 = b * rho
-            x1 = int(x0 + 50 * (-b))
-            y1 = int(y0 + 50 * (a))
-            x2 = int(x0 - 50 * (-b))
-            y2 = int(y0 - 50 * (a))
+            x1 = int(x0 + 800 * (-b))
+            y1 = int(y0 + 800 * (a))
+            x2 = int(x0 - 800 * (-b))
+            y2 = int(y0 - 800 * (a))
 
             xList = np.linspace(x1, x2, num=100)
             yList = np.linspace(y1, y2, num=100)
             ax.plot(xList, yList)
+            # ax.plot(yList, xList)
 
     plt.show()
     #plotPolar(angleList, distList)
