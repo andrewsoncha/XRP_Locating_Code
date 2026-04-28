@@ -4,6 +4,7 @@ from math import radians, cos, sin, sqrt
 from scipy.spatial import ConvexHull
 from sklearn.cluster import DBSCAN, HDBSCAN, AgglomerativeClustering
 from sklearn import linear_model
+import sys
 
 def plotCartesian(ax, cartesianList, color='b'):
     ax.scatter([pair[0] for pair in cartesianList], [pair[1] for pair in cartesianList], color=color)
@@ -49,43 +50,15 @@ def plot(X, labels, probabilities=None, parameters=None, ground_truth=False, ax=
     ax.set_title(title)
     plt.tight_layout()
 
-class Hough:
-    def __init__(self, maxR, rN = 60, angleN = 50):
-        self.angleN = angleN
-        self.rN = rN
-        self.maxR = maxR
-        self.angleList = np.linspace(-np.pi/2, np.pi, num=angleN)
-        self.accumulator = [[0 for _ in range(rN)] for _ in range(angleN)]
-        # print(len(self.accumulator), len(self.accumulator[0]))
-
-    def roundR(self, r):
-        # print(f'roundR({r})')
-        # print(f'roundR results: {int(r * (self.rN-1) / maxR)}')
-        #return self.rN//2 + int(r * self.rN//2 / maxR)
-        return self.rN //2 + int(r * (self.rN//2) / self.maxR)
-
-    def vote(self, x, y):
-        r = np.sqrt(x**2 + y**2)
-        for angleI in range(self.angleN):
-            angle = self.angleList[angleI]
-            # result_rI = self.roundR(r * np.cos(angle - theta))
-            result_rI = self.roundR(x*np.cos(angle) + y*np.sin(angle))
-            # print(f'angle: {angle}   result_rI: {result_rI}')
-            self.accumulator[angleI][result_rI] += 1
-        print()
-
-    def getLineParameters(self, thresh=5):
-        print([(self.angleList[i], (j/self.rN*self.maxR), self.accumulator[i][j]) for i in range(self.angleN) for j in range(self.rN) if self.accumulator[i][j]>=thresh])
-
-        return [(self.angleList[i], ((j-self.rN//2) * self.maxR/(self.rN//2)), self.accumulator[i][j]) for i in range(self.angleN) for j in range(self.rN) if self.accumulator[i][j]>=thresh]
-
 if __name__ == '__main__':
     angleList = []
     posList = []
     distList = []
-    with open('../testData/3dPrintRoom', 'r') as file:
+    file_path = sys.argv[1]
+    print('opening file_path: ', file_path)
+    with open(file_path, 'r') as file:
         for line in file:
-            # "Yaw: {current_yaw:.2f}, Range Distance: {rangeDist:.1f} cm, Robot Position: ({robot_x},{robot_y})" 
+            # "Yaw: {current_yaw:.2f}, Robot Position: ({robot_x},{robot_y}), Range Distance: {rangeDist:.1f} cm" 
             print('line: ', line)
             words = line.split()
             angleVal = radians(float(words[0]))

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import radians, cos, sin, sqrt
 from scipy.spatial import ConvexHull
+import sys
 
 def plotCartesian(ax, cartesianList, color='b'):
     ax.scatter([pair[0] for pair in cartesianList], [pair[1] for pair in cartesianList], color=color)
@@ -46,7 +47,9 @@ if __name__ == '__main__':
     angleList = []
     posList = []
     distList = []
-    with open('../testData/3dPrintRoom', 'r') as file:
+    file_path = sys.argv[1]
+    print('opening file_path: ', file_path)
+    with open(file_path, 'r') as file:
         for line in file:
             print('line: ', line)
             words = line.split()
