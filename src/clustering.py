@@ -3,6 +3,7 @@ import numpy as np
 from math import radians, cos, sin, sqrt
 from scipy.spatial import ConvexHull
 from sklearn.cluster import DBSCAN, HDBSCAN, AgglomerativeClustering
+from sklearn import linear_model
 
 def plotCartesian(ax, cartesianList, color='b'):
     ax.scatter([pair[0] for pair in cartesianList], [pair[1] for pair in cartesianList], color=color)
@@ -84,6 +85,7 @@ if __name__ == '__main__':
     distList = []
     with open('../testData/3dPrintRoom', 'r') as file:
         for line in file:
+            # "Yaw: {current_yaw:.2f}, Range Distance: {rangeDist:.1f} cm, Robot Position: ({robot_x},{robot_y})" 
             print('line: ', line)
             words = line.split()
             angleVal = radians(float(words[0]))
@@ -128,6 +130,19 @@ if __name__ == '__main__':
     # plot(cartesianList, dbs.labels_, ax=ax)
     # plot(cartesianList, clustering.labels_, ax=ax)
     labels = clustering.fit_predict(cartesianList)
-    ax.scatter(cartesianList[:, 0], cartesianList[:, 1],c=labels)
+
+    for label in set(labels):
+        print(label)
+        idxs = [idx for idx in range(len(labels)) if labels[idx]==label]
+        x_list = np.array(cartesianList[idxs, 0]).reshape(-1, 1)
+        y_list = np.array(cartesianList[idxs, 1]).reshape(-1, 1)
+        print('c: ', np.random.rand(3))
+        ax.scatter(x_list, y_list, c=np.random.rand(3))
+        regr = linear_model.LinearRegression()
+        print('x_list: ', x_list)
+        print('y_list: ', y_list)
+        regr.fit(x_list, y_list)
+        pred = regr.predict(x_list)
+        ax.plot(x_list, pred, color="black", linewidth=3)
 
     plt.show()
